@@ -1,0 +1,13 @@
+{
+    // Configuração para rodar um servidor web simples
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Abrir com Live Server",
+            "type": "shell",
+            "command": "code . && start chrome index.html",
+            "problemMatcher": [],
+            "group": "build"
+        }
+    ]
+}
