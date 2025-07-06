@@ -1,6 +1,413 @@
-/* Cole aqui o CSS do seu jogo */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 body {
-    background: #222;
-    color: #fff;
-    font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background-color: #333;
+  font-family: 'Press Start 2P', sans-serif;
+  touch-action: none;
+}
+
+#game-container {
+  border: 3px solid white;
+  position: relative;
+  overflow: hidden;
+  width: 600px;
+  height: 480px;
+}
+
+/* --- Telas de Transição Fullscreen --- */
+.fullscreen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  color: white;
+  font-family: 'Press Start 2P', sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.fullscreen-overlay h2 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.fullscreen-overlay p {
+  font-size: 1.2rem;
+  color: #ccc;
+  margin: 0;
+  text-align: center;
+  line-height: 1.4;
+  max-width: 600px;
+}
+
+.fullscreen-overlay h3 {
+  font-size: 1.5rem;
+  color: #ff9e00;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+#spectator-players-info {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+#active-players-list {
+  font-size: 1rem;
+  color: #fff;
+  text-align: center;
+}
+
+#spectator-timer {
+  font-size: 2rem !important;
+  font-weight: bold;
+  color: #ff9e00;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin: 20px 0;
+}
+
+#death-notification {
+  background: rgba(220, 53, 69, 0.9) !important;
+  color: white !important;
+  padding: 15px 25px !important;
+  border-radius: 10px !important;
+  font-size: 1.1rem !important;
+  text-align: center !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* --- Painel de Espectador --- */
+.spectator-panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  font-family: 'Press Start 2P', sans-serif;
+  z-index: 1000;
+  max-width: 250px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.spectator-panel h3 {
+  font-size: 0.9rem;
+  color: #ff9e00;
+  margin: 0 0 10px 0;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.spectator-panel p {
+  font-size: 0.7rem;
+  color: #ccc;
+  margin: 0 0 10px 0;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.spectator-panel #spectator-timer {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ff9e00;
+  text-align: center;
+  margin: 10px 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* --- Telas e Menus --- */
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
+  z-index: 30;
+}
+
+#map-select-screen, #pause-menu, #game-over-screen {
+  display: none;
+}
+
+#round-over-screen {
+  display: none;
+  background-color: rgba(0, 0, 0, 0.9);
+  text-align: center;
+}
+
+#round-over-screen h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #ffd700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+#round-over-screen p {
+  font-size: 1.2rem;
+  color: #ccc;
+  margin: 0;
+}
+
+#menu-screen {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding-top: 10px;
+  padding-left: 10px;
+}
+
+#menu-screen, #map-select-screen {
+  background-image: url('Arquivos/Imagens/Menu/wallpaper.png.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+#pause-menu, #game-over-screen {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.screen button {
+  font-family: 'Press Start 2P', sans-serif;
+  padding: 15px 30px;
+  cursor: pointer;
+  width: 320px;
+  text-align: center;
+  border: 2px solid #222;
+  border-radius: 8px;
+  background-color: #f0f0f0;
+  color: #333;
+  box-shadow: 0px 4px 0px 0px #aaa;
+  transition: all 0.1s ease-out;
+}
+
+#menu-screen button {
+    padding: 12px 25px;
+    width: 280px;
+    opacity: 0.8;
+}
+
+/* [NOVO] Animação ao passar o mouse por cima */
+.screen button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 0px 0px #aaa;
+}
+
+#menu-screen button:hover {
+    opacity: 1;
+}
+
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: auto !important; /* Sobrescreve o width padrão */
+    padding: 10px 20px !important; /* Padding menor */
+    font-size: 0.8rem;
+}
+
+.screen button:active {
+  transform: translateY(4px);
+  box-shadow: 0px 0px 0px 0px #aaa;
+  filter: brightness(0.95);
+}
+
+#menu-screen h1 {
+  font-size: 3rem;
+  text-align: center;
+  background-image: linear-gradient(to bottom, #fceabb, #f8b500);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 2px 2px #a54c25;
+  margin-bottom: 20px;
+}
+
+.screen h2 {
+  font-size: 2.5rem;
+  margin: 0;
+  text-align: center;
+}
+
+/* --- Elementos do Jogo --- */
+#game-canvas {
+  display: none;
+  background-color: #3a8f4a;
+}
+
+#pause-button, #bomb-button, #trap-button {
+  transition: all 0.1s ease-out;
+  box-shadow: 0px 4px 0px 0px rgba(0, 0, 0, 0.4);
+}
+
+/* [NOVO] Animação de hover para os botões de ação */
+#pause-button:hover, #bomb-button:hover, #trap-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 0px 0px rgba(0, 0, 0, 0.4);
+  opacity: 1; /* Garante opacidade total no hover */
+}
+
+#pause-button:active, #bomb-button:active, #trap-button:active {
+  transform: translateY(4px);
+  box-shadow: none;
+  filter: brightness(0.9);
+}
+
+
+#pause-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.3);
+  border: 2px solid white;
+  border-radius: 50%;
+  color: white;
+  cursor: pointer;
+  display: none;
+  z-index: 25;
+}
+
+#action-buttons {
+  position: absolute;
+  bottom: 40px;
+  right: 20px;
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 15px;
+  z-index: 20;
+}
+
+#bomb-button, #trap-button {
+  font-family: 'Press Start 2P', sans-serif;
+  line-height: 1.2;
+  color: white;
+  border: 3px solid white;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+#bomb-button {
+  width: 100px;
+  height: 100px;
+  font-size: 0.8rem;
+  background-color: #e63946;
+}
+
+#trap-button {
+  width: 80px;
+  height: 80px;
+  font-size: 0.6rem;
+  background-color: #8338ec;
+  display: none;
+}
+
+#trap-button:disabled {
+  background-color: #555;
+  cursor: not-allowed;
+}
+
+#logo {
+  width: 300px;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+/* Estilos para o campo de nome do jogador */
+.player-name-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.player-name-container label {
+  font-size: 0.9rem;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin: 0;
+}
+
+#player-name-input {
+  font-family: 'Press Start 2P', sans-serif;
+  font-size: 0.8rem;
+  padding: 8px 12px;
+  border: 2px solid #222;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #333;
+  text-align: center;
+  width: 200px;
+  box-shadow: 0px 2px 0px 0px #aaa;
+  transition: all 0.1s ease-out;
+}
+
+#player-name-input:focus {
+  outline: none;
+  border-color: #f8b500;
+  box-shadow: 0px 2px 0px 0px #f8b500;
+  transform: translateY(-1px);
+}
+
+#player-name-input::placeholder {
+  color: #666;
+  opacity: 0.7;
+}
+
+/* Botão de engrenagem centralizado na área branca circular */
+#menu-screen {
+    position: relative;
+}
+#menu-screen .gear-btn {
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.95);
+    border: none;
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    font-size: 2em;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    transition: background 0.2s, box-shadow 0.2s;
+    padding: 0;
+}
+#menu-screen .gear-btn:hover {
+    background: #e0e0e0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+#menu-screen .gear-btn:active {
+    background: #d0d0d0;
 }

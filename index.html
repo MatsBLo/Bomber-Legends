@@ -3,12 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- [MODIFICADO] Título da aba do navegador -->
     <title>Bomber Legends</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Cole aqui o conteúdo do seu jogo -->
-    <script src="index.js"></script>
-    <script src="script.js"></script>
+    <div id="game-container">
+    <div id="match-timer" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:1001;font-size:2em;font-family:'Press Start 2P',monospace;color:#fff;text-shadow:2px 2px 8px #000,0 0 8px #000;display:none;"></div>
+    <!-- Música de fundo -->
+    <audio id="bg-music" src="Arquivos/Sons/pixeldreams.mp3.mp3" loop autoplay></audio>
+    <!-- Tela de Menu Principal -->
+        <div id="menu-screen" class="screen">
+            <!-- [MODIFICADO] Título do jogo no menu -->
+            <button id="settings-button" class="gear-btn" title="Configurações">⚙️</button>
+            <img src="Arquivos/Imagens/Menu/logo.png.png" alt="Bomber Legends Logo" id="logo">
+            
+            <!-- Campo para nome do jogador -->
+            <div class="player-name-container">
+                <label for="player-name-input">Seu Nome:</label>
+                <input type="text" id="player-name-input" maxlength="15" placeholder="Digite seu nome" value="Jogador">
+            </div>
+            
+            <button id="online-button">Online</button>
+            <button id="training-button">Treino Solo</button>
+        </div>
+
+        <!-- Tela Online -->
+        <div id="online-screen" class="screen" style="display:none;">
+            <h2>Modo Online</h2>
+            <button id="matchmaking-button">Parear</button>
+            <button id="rooms-button">Salas</button>
+            <button id="online-back-button">Voltar</button>
+        </div>
+
+        <!-- Tela do Lobby de Salas -->
+
+        <div id="rooms-lobby-screen" class="screen" style="display:none;">
+            <button id="rooms-back-button" class="back-button">Voltar</button>
+            <h2>Salas</h2>
+            
+            <!-- ÁREA ONDE A LISTA DE SALAS VAI APARECER -->
+            <div id="rooms-list-container">
+                <!-- O JavaScript vai preencher esta área -->
+            </div>
+
+            <button id="create-room-button">Criar Sala</button>
+        </div>
+
+        <!-- Tela de Criação de Sala -->
+        <div id="create-room-screen" class="screen" style="display:none;">
+            <button id="create-room-back-button" class="back-button">Voltar</button>
+            <h2>Criar Sala</h2>
+            <label for="room-name-input">Nome da Sala:</label>
+            <input type="text" id="room-name-input" maxlength="20" placeholder="Digite o nome da sala">
+            <br><br>
+            <label for="room-map-select">Mapa:</label>
+            <select id="room-map-select">
+                <option value="map1">Mapa 1 (Clássico)</option>
+                <option value="map2">Mapa 2 (Distribuído)</option>
+                <option value="map3">Mapa 3 (Labirinto)</option>
+                <option value="random">Aleatório</option>
+            </select>
+            <br><br>
+            <button id="confirm-create-room-button">Criar e Entrar</button>
+        </div>
+
+        <!-- Tela de Configurações -->
+        <div id="settings-screen" class="screen" style="display:none;">
+            <h2>Configurações</h2>
+            <label for="music-volume">Volume da Música:</label>
+            <input type="range" id="music-volume" min="0" max="1" step="0.01" value="0.5">
+            <span id="music-volume-value">50%</span>
+            <br><br>
+            <button id="toggle-music-button">Desligar Música</button>
+            <br><br>
+            <button id="close-settings-button">Voltar</button>
+        </div>
+
+        <!-- Tela de Seleção de Mapa -->
+        <div id="map-select-screen" class="screen">
+            <h2>Escolha o Mapa</h2>
+            <button id="map1-button">Mapa 1 (Clássico)</button>
+            <button id="map2-button">Mapa 2 (Distribuído)</button>
+            <button id="map3-button">Mapa 3 (Labirinto)</button>
+            <button id="random-map-button">Aleatório</button>
+        </div>
+
+        <!-- Canvas do Jogo -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- Botão de Pausa In-Game -->
+        <button id="pause-button">⚙️</button>
+
+        <!-- Menu de Pausa -->
+        <div id="pause-menu" class="screen">
+            <h2>Pausado</h2>
+            <button id="resume-button">Continuar</button>
+            <button id="exit-to-menu-button">Voltar ao Menu</button>
+        </div>
+
+        <!-- Botões de Ação para Mobile -->
+        <div id="action-buttons">
+            <button id="trap-button">Armadilha (0)</button>
+            <button id="bomb-button">Bomba</button>
+        </div>
+
+        <!-- Tela de Fim de Jogo -->
+        <div id="game-over-screen" class="screen">
+            <h2 id="game-over-message"></h2>
+            <button id="restart-button">Recomeçar</button>
+            <button id="menu-button">Voltar ao Menu</button>
+        </div>
+
+        <!-- Tela de Fim de Rodada -->
+        <div id="round-over-screen" class="screen">
+            <h2 id="round-over-message"></h2>
+            <p>A próxima rodada começa em breve...</p>
+        </div>
+    </div>
+
+    <!-- Tela de Preparação de Partida (FORA DO GAME-CONTAINER) -->
+    <div id="preparing-match-screen" class="fullscreen-overlay" style="display: none;">
+        <h2 id="preparing-match-message">A partida começa em 3...</h2>
+    </div>
+
+    <!-- Tela de Espectador (FORA DO GAME-CONTAINER) -->
+    <div id="spectator-screen" class="spectator-panel" style="display: none;">
+        <h3>Modo Espectador</h3>
+        <p id="spectator-message">
+            Aguarde a próxima rodada para jogar!
+        </p>
+        <!-- Notificação de morte -->
+        <div id="death-notification" style="background: rgba(220, 53, 69, 0.9); color: white; padding: 10px 15px; border-radius: 8px; font-size: 0.9rem; display: none; margin-top: 10px; text-align: center;">
+            💀 Você morreu! Aguardando próxima rodada...
+        </div>
+    </div>
+
+    <!-- Painel de estatísticas da sessão -->
+    <div id="session-stats" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 10px; border-radius: 5px; font-family: sans-serif; z-index: 1000; display: none;">
+        <h3>Estatísticas da Sessão</h3>
+        <p>Total de Partidas: <span id="total-matches">0</span></p>
+        <ul id="player-list" style="margin:0; padding-left: 18px;"></ul>
+    </div>
+
+    <!-- Mensagem de Respawn (escondida por padrão) -->
+    <div id="respawn-message" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px 20px; border-radius: 10px; z-index: 2000; display: none; font-size: 1.2rem;"></div>
+
+    <!-- Bibliotecas externas (Joystick) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+    <!-- Seu script do jogo -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
