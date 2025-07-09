@@ -785,39 +785,80 @@ io.on('connection', (socket) => {
 
     socket.on('useFlyingBomb', (data) => {
         const room = rooms[socket.data.roomName];
-        if (!room || room.gameState !== 'playing') return;
+        // Permite tanto em 'playing' quanto em 'warming_up'
+        if (!room || (room.gameState !== 'playing' && room.gameState !== 'warming_up')) {
+            return;
+        }
 
         const p = room.players[socket.id];
-        if (!p || !p.isAlive || !p.flyingBombs || p.flyingBombs <= 0) return;
+        if (!p || !p.isAlive || !p.flyingBombs || p.flyingBombs <= 0) {
+            return;
+        }
 
+        // Direção: 0 = esquerda, 1 = direita, 2 = cima, 3 = baixo
         const dir = typeof data.dir === 'number' ? data.dir : 1;
         let dx = 0, dy = 0;
-        if (dir === 0) dx = -1; else if (dir === 1) dx = 1; else if (dir === 2) dy = -1; else if (dir === 3) dy = 1;
-        
+        if (dir === 0) dx = -1;
+        else if (dir === 1) dx = 1;
+        else if (dir === 2) dy = -1;
+        else if (dir === 3) dy = 1;
+
+        // Posição atual do jogador
         let px = Math.floor(p.x / TILE_SIZE);
         let py = Math.floor((p.y + p.height / 4) / TILE_SIZE);
-        let found = false, target = null;
 
-        for (let dist = FLYING_BOMB_RANGE; dist >= 1; dist--) {
-            let tx = px + dx * dist; let ty = py + dy * dist;
+        // Passo 1: Tenta 3 blocos à frente
+        let target = null;
+        let found = false;
+        const maxRange = FLYING_BOMB_RANGE;
+        // Plano A: busca para frente (3, 4, 5, ...)
+        for (let dist = maxRange; dist < Math.max(GRID_ROWS, GRID_COLS); dist++) {
+            let tx = px + dx * dist;
+            let ty = py + dy * dist;
             if (room.grid[ty] && room.grid[ty][tx] === 0) {
-                target = { row: ty, col: tx }; found = true; break;
+                target = { row: ty, col: tx };
+                found = true;
+                break;
+            }
+            // Se encontrar parede indestrutível, para a busca
+            if (!room.grid[ty] || room.grid[ty][tx] === 1) {
+                break;
             }
         }
+        // Plano B: busca para trás (2, 1 blocos)
         if (!found) {
-            for (let dist = FLYING_BOMB_RANGE + 1; dist < Math.max(GRID_ROWS, GRID_COLS); dist++) {
-                let tx = px + dx * dist; let ty = py + dy * dist;
-                if (room.grid[ty] && room.grid[ty][tx] === 0) { target = { row: ty, col: tx }; found = true; break; }
+            for (let dist = maxRange - 1; dist >= 1; dist--) {
+                let tx = px + dx * dist;
+                let ty = py + dy * dist;
+                if (room.grid[ty] && room.grid[ty][tx] === 0) {
+                    target = { row: ty, col: tx };
+                    found = true;
+                    break;
+                }
+                if (!room.grid[ty] || room.grid[ty][tx] === 1) {
+                    break;
+                }
             }
         }
-        if (found && target) {
-            p.flyingBombs--;
-            const bomb = { ownerId: socket.id, row: target.row, col: target.col, range: p.explosionRange, placeTime: Date.now(), isSolid: false };
-            room.bombs.push(bomb);
-            room.grid[target.row][target.col] = 3;
-            io.to(room.name).emit('bombPlaced', bomb);
-            io.to(room.name).emit('playerStatsUpdate', { id: socket.id, stats: { flyingBombs: p.flyingBombs } });
+        // Se não achou nenhum local válido, não consome o item
+        if (!found || !target) {
+            return;
         }
+
+        // Consome o item
+        p.flyingBombs--;
+        const bomb = {
+            ownerId: socket.id,
+            row: target.row,
+            col: target.col,
+            range: p.explosionRange,
+            placeTime: Date.now(),
+            isSolid: false
+        };
+        room.bombs.push(bomb);
+        room.grid[target.row][target.col] = 3;
+        io.to(room.name).emit('bombPlaced', bomb);
+        io.to(room.name).emit('playerStatsUpdate', { id: socket.id, stats: { flyingBombs: p.flyingBombs } });
     });
 
     socket.on('leaveGame', () => {

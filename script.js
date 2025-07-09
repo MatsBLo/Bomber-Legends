@@ -380,7 +380,10 @@ async function loadAllImages() {
         await Promise.all(Object.entries(CHARACTER_SKINS).map(([key, src]) => loadImage(key, src)));
         await Promise.all([
             loadImage('player', 'https://files.catbox.moe/x7aph0.PNG'),
-            loadImage('otherPlayer', 'https://files.catbox.moe/x7aph0.PNG')
+            loadImage('otherPlayer', 'https://files.catbox.moe/x7aph0.PNG'),
+            loadImage('indestructibleBlock', 'Arquivos/Imagens/Blocos/blocoindestrutível.png (2).png'),
+            loadImage('freeBlock', 'Arquivos/Imagens/Blocos/blocolivre.png.png'),
+            loadImage('bomb', 'Arquivos/Imagens/Itens/bomba.png.png')
         ]);
         console.log("Todas as imagens foram carregadas com sucesso!");
         window._imagesLoaded = true;
@@ -455,19 +458,135 @@ function initializeEnemy() { enemy = { x: TILE_SIZE * (GRID_COLS - 1.5), y: TILE
 function createGrid(mapId) { let mapChoice=mapId;if(mapChoice==='random'){mapChoice=Math.random()<0.5?'map1':'map2';}grid=[];for(let r=0;r<GRID_ROWS;r++){grid[r]=[];for(let c=0;c<GRID_COLS;c++){grid[r][c]=0;}}if(mapChoice==='map1'){for(let r=0;r<GRID_ROWS;r++){for(let c=0;c<GRID_COLS;c++){if(r%2===0&&c%2===0)grid[r][c]=1;}}}else if(mapChoice==='map2'){const mapBlueprint=[ {r:2,c:2},{r:2,c:3},{r:2,c:6},{r:2,c:8},{r:2,c:11},{r:2,c:12},{r:4,c:4},{r:4,c:5},{r:4,c:9},{r:4,c:10},{r:5,c:2},{r:5,c:6},{r:5,c:8},{r:5,c:12},{r:6,c:2},{r:6,c:6},{r:6,c:8},{r:6,c:12},{r:7,c:4},{r:7,c:5},{r:7,c:9},{r:7,c:10},{r:9,c:2},{r:9,c:3},{r:9,c:6},{r:9,c:8},{r:9,c:11},{r:9,c:12}, ];mapBlueprint.forEach(pos=>{grid[pos.r][pos.c]=1;});}for(let r=0;r<GRID_ROWS;r++){for(let c=0;c<GRID_COLS;c++){if(r===0||r===GRID_ROWS-1||c===0||c===GRID_COLS-1){grid[r][c]=1;}else if(grid[r][c]===0){grid[r][c]=Math.random()<0.75?2:0;}}}grid[1][1]=0;grid[1][2]=0;grid[2][1]=0;grid[GRID_ROWS-2][GRID_COLS-2]=0;grid[GRID_ROWS-2][GRID_COLS-3]=0;grid[GRID_ROWS-3][GRID_COLS-2]=0; }
 
 // --- DESENHO ---
-function drawIndestructibleWall(x, y) { ctx.fillStyle = '#6c757d'; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE); ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + TILE_SIZE, y); ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE); ctx.lineTo(x, y + TILE_SIZE); ctx.lineTo(x, y); ctx.fill(); ctx.fillStyle = '#adb5bd'; ctx.fillRect(x + 5, y + 5, 8, 8); }
+function drawIndestructibleWall(x, y) {
+    const img = gameImages['indestructibleBlock'];
+    if (img instanceof HTMLImageElement) {
+        ctx.drawImage(img, x, y, TILE_SIZE, TILE_SIZE);
+    } else {
+        // Fallback para o desenho original se a imagem não estiver carregada
+        ctx.fillStyle = '#6c757d';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + TILE_SIZE, y);
+        ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
+        ctx.lineTo(x, y + TILE_SIZE);
+        ctx.lineTo(x, y);
+        ctx.fill();
+        ctx.fillStyle = '#adb5bd';
+        ctx.fillRect(x + 5, y + 5, 8, 8);
+    }
+}
+
+function drawFreeBlock(x, y) {
+    const img = gameImages['freeBlock'];
+    if (img instanceof HTMLImageElement) {
+        ctx.drawImage(img, x, y, TILE_SIZE, TILE_SIZE);
+    } else {
+        // Fallback para o fundo verde se a imagem não estiver carregada
+        ctx.fillStyle = '#3a8f4a';
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+    }
+}
 function drawDestructibleBlock(x, y) { ctx.fillStyle = '#b5651d'; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE); ctx.strokeStyle = '#663300'; ctx.lineWidth = 2; ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE); ctx.beginPath(); ctx.moveTo(x, y + TILE_SIZE / 2); ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE / 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x + TILE_SIZE / 2, y); ctx.lineTo(x + TILE_SIZE / 2, y + TILE_SIZE / 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x + TILE_SIZE / 2 - (TILE_SIZE / 4) , y + TILE_SIZE / 2); ctx.lineTo(x + TILE_SIZE / 2 - (TILE_SIZE / 4), y + TILE_SIZE); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x + TILE_SIZE / 2 + (TILE_SIZE / 4) , y + TILE_SIZE / 2); ctx.lineTo(x + TILE_SIZE / 2 + (TILE_SIZE / 4), y + TILE_SIZE); ctx.stroke(); }
-function drawBombs() { const now = Date.now(); bombs.forEach(bomb => { const x = bomb.col * TILE_SIZE, y = bomb.row * TILE_SIZE; const flash = Math.floor((now - bomb.placeTime) / 200) % 2 === 0; ctx.fillStyle = flash ? 'black' : 'grey'; ctx.beginPath(); ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE / 2.5, 0, 2 * Math.PI); ctx.fill(); ctx.strokeStyle = 'orange'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + TILE_SIZE / 2, y + TILE_SIZE / 2); ctx.lineTo(x + TILE_SIZE - 5, y + 5); ctx.stroke(); }); }
+function drawBombs() {
+    const now = Date.now();
+    bombs.forEach(bomb => {
+        const x = bomb.col * TILE_SIZE;
+        const y = bomb.row * TILE_SIZE;
+        
+        // Calcula o tempo decorrido desde que a bomba foi colocada
+        const timeElapsed = now - bomb.placeTime;
+        
+        // Animação de pulsação: aumenta e diminui o tamanho a cada segundo
+        const pulseSpeed = 1000; // 1 segundo por ciclo
+        const pulseIntensity = 0.08; // 8% de variação no tamanho (reduzido de 20% para 8%)
+        const pulse = Math.sin((timeElapsed / pulseSpeed) * Math.PI * 2) * pulseIntensity + 1;
+        
+        // Tamanho base da bomba (aumentado)
+        const baseSize = TILE_SIZE * 1.2; // Aumentado de 0.8 para 1.2
+        const currentSize = baseSize * pulse;
+        
+        // Posição central da bomba
+        const centerX = x + TILE_SIZE / 2;
+        const centerY = y + TILE_SIZE / 2;
+        
+        // Desenha a imagem da bomba
+        const img = gameImages['bomb'];
+        if (img instanceof HTMLImageElement) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.drawImage(img, -currentSize/2, -currentSize/2, currentSize, currentSize);
+            ctx.restore();
+        } else {
+            // Fallback para o desenho original se a imagem não estiver carregada
+            const flash = Math.floor(timeElapsed / 200) % 2 === 0;
+            ctx.fillStyle = flash ? 'black' : 'grey';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, currentSize/2, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = 'orange';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x + TILE_SIZE - 5, y + 5);
+            ctx.stroke();
+        }
+    });
+}
 function drawExplosions() { ctx.fillStyle = '#ff9e00'; explosions.forEach(exp => { ctx.fillRect(exp.col * TILE_SIZE, exp.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); }); }
 function drawCharacter(character, imageKey) {
     if (!character || !character.isAlive) return;
-    const scale = 1.3, w = TILE_SIZE * scale, h = TILE_SIZE * scale;
-    const drawX = character.x - w / 2, feetY = character.y + character.height / 2;
-    const drawY = (feetY - h) + TILE_SIZE / 4;
+    const scale = 1.8, w = TILE_SIZE * scale, h = TILE_SIZE * scale; // Aumentado de 1.3 para 1.8
+    const feetY = character.y + character.height / 2;
+    
+    // Animação de caminhada - balanço suave para cima e para baixo
+    let walkAnimationOffsetY = 0;
+    let walkAnimationOffsetX = 0;
+    const isMoving = (character.dx !== 0 || character.dy !== 0);
+    
+    if (isMoving) {
+        // Cria um efeito de balanço baseado no tempo
+        const walkSpeed = 3.5; // Velocidade da animação (aumentada um pouco)
+        const walkAmplitudeY = 1.2; // Altura do balanço vertical (aumentada um pouco)
+        const walkAmplitudeX = 0.2; // Altura do balanço lateral (aumentada um pouco)
+        
+        const time = Date.now() * 0.01;
+        walkAnimationOffsetY = Math.sin(time * walkSpeed) * walkAmplitudeY;
+        walkAnimationOffsetX = Math.sin(time * walkSpeed * 1.3) * walkAmplitudeX; // Movimento lateral suave
+    } else {
+        // Animação sutil de "respirar" quando parado
+        const breathSpeed = 1.2; // Velocidade da respiração (aumentada um pouco)
+        const breathAmplitude = 0.4; // Altura da respiração (aumentada um pouco)
+        const time = Date.now() * 0.01;
+        walkAnimationOffsetY = Math.sin(time * breathSpeed) * breathAmplitude;
+    }
+    
+    const drawY = (feetY - h) + TILE_SIZE / 4 + walkAnimationOffsetY;
+    const drawX = character.x - w / 2 + walkAnimationOffsetX;
+    
     ctx.save();
     try {
         const img = gameImages[imageKey];
         if (img instanceof HTMLImageElement) {
+            // Adiciona uma leve rotação quando está se movendo
+            if (isMoving) {
+                const rotationSpeed = 0.25; // Velocidade da rotação (aumentada um pouco)
+                const rotationAmplitude = 0.005; // Amplitude da rotação (aumentada um pouco)
+                const rotation = Math.sin(Date.now() * 0.01 * rotationSpeed) * rotationAmplitude;
+                
+                // Adiciona uma leve variação de escala para simular "pulo" do movimento
+                const scaleSpeed = 2.5; // Velocidade da variação de escala (aumentada um pouco)
+                const scaleAmplitude = 0.015; // Amplitude da variação de escala (aumentada um pouco)
+                const scaleVariation = 1 + Math.sin(Date.now() * 0.01 * scaleSpeed) * scaleAmplitude;
+                
+                ctx.translate(character.x, drawY + h / 2);
+                ctx.rotate(rotation);
+                ctx.scale(scaleVariation, scaleVariation);
+                ctx.translate(-character.x, -(drawY + h / 2));
+            }
+            
             if (character.facingDirection === 1) {
                 ctx.scale(-1, 1);
                 ctx.drawImage(img, -drawX - w, drawY, w, h);
@@ -482,6 +601,7 @@ function drawCharacter(character, imageKey) {
     } finally {
         ctx.restore();
     }
+    
     // Efeito visual de congelamento
     if (character.isFrozen) {
         const visualCenterY = drawY + h / 2;
@@ -490,6 +610,7 @@ function drawCharacter(character, imageKey) {
         ctx.arc(character.x, visualCenterY, character.width, 0, 2 * Math.PI);
         ctx.fill();
     }
+    
     // Efeito visual de escudo
     if (character.hasShield && (!character.shieldUntil || Date.now() < character.shieldUntil)) {
         const visualCenterY = drawY + h / 2;
@@ -566,6 +687,11 @@ function drawGame() {
     for (let r = 0; r < GRID_ROWS; r++) {
         for (let c = 0; c < GRID_COLS; c++) {
             const val = grid[r][c];
+            // Sempre desenhe o fundo primeiro, exceto para paredes
+            if (val !== 1 && val !== 2) {
+                drawFreeBlock(c * TILE_SIZE, r * TILE_SIZE);
+            }
+            // Depois desenhe o que for necessário
             if (val === 1) drawIndestructibleWall(c * TILE_SIZE, r * TILE_SIZE);
             else if (val === 2) drawDestructibleBlock(c * TILE_SIZE, r * TILE_SIZE);
             else if (val === 4) drawFireItem(c * TILE_SIZE, r * TILE_SIZE);
@@ -574,6 +700,7 @@ function drawGame() {
             else if (val === 7) drawSpeedItem(c * TILE_SIZE, r * TILE_SIZE);
             else if (val === 8) drawShieldItem(c * TILE_SIZE, r * TILE_SIZE);
             else if (val === 9) drawFlyingBombItem(c * TILE_SIZE, r * TILE_SIZE);
+            // Não precisa de else para 0, pois já desenhou o fundo
         }
     }
     drawTrapAoe();
@@ -601,7 +728,7 @@ function drawHUD() {
     if (!player || typeof player.speed === 'undefined') return; 
     
     const iconSize = 20, padding = 10, itemWidth = 55, hudHeight = 35; 
-    const totalWidth = (itemWidth * 3) + (padding * 2); 
+    const totalWidth = (itemWidth * 4) + (padding * 3); 
     const startX = canvas.width - totalWidth; 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; 
     ctx.fillRect(startX, 0, totalWidth, hudHeight); 
@@ -645,6 +772,7 @@ function drawHUD() {
 function getPlayerGridPos() { if (!player || typeof player.x === 'undefined') return {}; const logicalY = player.y + player.height / 4; const col = Math.floor(player.x / TILE_SIZE); const row = Math.floor(logicalY / TILE_SIZE); return { col, row }; }
 // --- LÓGICA DE UPDATE ---
 function updatePlayer() {
+    handleMovement();
     if (!player || !player.isAlive || player.isFrozen) return;
 
     const prevX = player.x, prevY = player.y, prevFacing = player.facingDirection;
@@ -681,6 +809,9 @@ function updatePlayer() {
             } else if (itemType === 8) { // Adiciona lógica para coletar o escudo
                 player.hasShield = true;
                 player.shieldEndTime = Date.now() + 6000; // Escudo dura 6 segundos
+            } else if (itemType === 9) {
+                player.flyingBombs = (player.flyingBombs || 0) + 1;
+                updateFlyingBombButton();
             }
             grid[row][col] = 0; // Remove o item do grid no modo offline
         }
@@ -802,7 +933,7 @@ function checkGameState() {
 
             // Chance de spawnar um item (ajuste a probabilidade conforme necessário)
             if (Math.random() < 0.2) { // 20% de chance de spawnar um item
-                const itemTypes = [4, 5, 6, 7, 8]; // 4: Fire, 5: Trap, 6: Bomb, 7: Speed, 8: Shield
+                const itemTypes = [4, 5, 6, 7, 8, 9]; // 4: Fire, 5: Trap, 6: Bomb, 7: Speed, 8: Shield, 9: Flying Bomb
                 const randomItemType = itemTypes[Math.floor(Math.random() * itemTypes.length)];
                 grid[exp.row][exp.col] = randomItemType; // Coloca o item no grid
             }
@@ -1271,6 +1402,7 @@ socket.on('playerStatsUpdate', (data) => {
         }
         updateBombButton();
         updateTrapButton();
+        updateFlyingBombButton(); // <-- Atualiza o botão da bomba voadora
     } else if (otherPlayers[data.id]) {
         // Para outros jogadores, pode atualizar tudo normalmente
         Object.assign(otherPlayers[data.id], data.stats);
@@ -1535,7 +1667,18 @@ if (!document.getElementById('flying-bomb-button')) {
     flyingBombButton.id = 'flying-bomb-button';
     flyingBombButton.innerText = 'Bomba Voadora';
     flyingBombButton.style.display = 'none';
-    actionButtons.appendChild(flyingBombButton);
+    flyingBombButton.style.background = '#ffb703';
+    flyingBombButton.style.color = '#222';
+    flyingBombButton.style.fontWeight = 'bold';
+    flyingBombButton.style.fontSize = '0.7rem';
+    flyingBombButton.style.width = '80px';
+    flyingBombButton.style.height = '80px';
+    flyingBombButton.style.borderRadius = '50%';
+    flyingBombButton.style.marginBottom = '8px';
+    flyingBombButton.style.border = '3px solid #fb8500';
+    flyingBombButton.style.boxShadow = '0 2px 8px #0004';
+    flyingBombButton.style.transition = 'all 0.1s';
+    actionButtons.insertBefore(flyingBombButton, actionButtons.firstChild);
 } else {
     flyingBombButton = document.getElementById('flying-bomb-button');
 }
@@ -1543,16 +1686,20 @@ if (!document.getElementById('flying-bomb-button')) {
 function updateFlyingBombButton() {
     if (!player) return;
     flyingBombButton.innerText = `Bomba Voadora\n(${player.flyingBombs || 0})`;
-    flyingBombButton.disabled = !player.flyingBombs || player.flyingBombs <= 0;
-    flyingBombButton.style.display = player.flyingBombs > 0 ? 'block' : 'none';
+    flyingBombButton.disabled = !player.flyingBombs || player.flyingBombs <= 0 || !player.isAlive || player.isFrozen;
+    flyingBombButton.style.display = player.flyingBombs > 0 && player.isAlive && !player.isSpectator ? 'block' : 'none';
 }
 
 function handlePlaceFlyingBomb(e) {
     if (e) e.preventDefault();
     if (!player || !player.isAlive || player.isFrozen || !player.flyingBombs || player.flyingBombs <= 0) return;
-    // Usa a direção do player (igual armadilha: para onde está olhando)
-    let dir = player.facingDirection;
-    if (typeof dir !== 'number' || dir < 0 || dir > 3) dir = 1; // padrão: direita
+    // Determina a direção baseada no último movimento válido
+    let dir;
+    if (player.dy < 0) dir = 2; // Cima
+    else if (player.dy > 0) dir = 3; // Baixo
+    else if (player.facingDirection === 1) dir = 1; // Direita
+    else if (player.facingDirection === -1) dir = 0; // Esquerda
+    else dir = 1; // Padrão: direita
     socket.emit('useFlyingBomb', { dir });
 }
 
@@ -1566,40 +1713,61 @@ flyingBombButton.addEventListener('click', handlePlaceFlyingBomb);
 // Atalhos de teclado para movimentação, bomba, armadilha e bomba voadora
 const keyState = {};
 
+// Objeto global para rastrear o estado das teclas
+const keys = {
+    w: false,
+    a: false,
+    s: false,
+    d: false,
+    arrowup: false,
+    arrowdown: false,
+    arrowleft: false,
+    arrowright: false,
+    ' ': false,
+    e: false,
+    o: false
+};
+
 window.addEventListener('keydown', (e) => {
-    if (e.repeat) return;
-    // Protege contra eventos sem key
     if (!e || typeof e.key !== 'string') return;
-    if (!player || !player.isAlive || player.isFrozen) return;
     const key = e.key.toLowerCase();
-    keyState[key] = true;
-    // Movimentação (WASD e Setas)
-    if (key === 'arrowup' || key === 'w') player.dy = -1;
-    if (key === 'arrowdown' || key === 's') player.dy = 1;
-    if (key === 'arrowleft' || key === 'a') player.dx = -1;
-    if (key === 'arrowright' || key === 'd') player.dx = 1;
-    // Ações
-    if (key === ' ' || key === 'spacebar' || key === 'space') {
+    if (keys.hasOwnProperty(key)) {
+        keys[key] = true;
+    }
+    // Ações (bomba, armadilha, bomba voadora)
+    if ((key === ' ' || key === 'spacebar' || key === 'space') && !e.repeat) {
         e.preventDefault();
         placeBomb();
     }
-    if (key === 'e') {
+    if (key === 'e' && !e.repeat) {
         placeTrap();
     }
-    if (key === 'o') {
+    if (key === 'o' && !e.repeat) {
         handlePlaceFlyingBomb(e);
     }
 });
+
 window.addEventListener('keyup', (e) => {
     if (!e || typeof e.key !== 'string') return;
     const key = e.key.toLowerCase();
-    keyState[key] = false;
-    // Parar movimentação ao soltar a tecla
-    if ((key === 'arrowup' || key === 'w') && player.dy === -1) player.dy = 0;
-    if ((key === 'arrowdown' || key === 's') && player.dy === 1) player.dy = 0;
-    if ((key === 'arrowleft' || key === 'a') && player.dx === -1) player.dx = 0;
-    if ((key === 'arrowright' || key === 'd') && player.dx === 1) player.dx = 0;
+    if (keys.hasOwnProperty(key)) {
+        keys[key] = false;
+    }
 });
+
+// Função para processar o movimento baseado no estado das teclas
+function handleMovement() {
+    if (!player || !player.isAlive || player.isFrozen) return;
+    // Reset dx/dy
+    player.dx = 0;
+    player.dy = 0;
+    // Vertical
+    if (keys.w || keys.arrowup) player.dy = -1;
+    else if (keys.s || keys.arrowdown) player.dy = 1;
+    // Horizontal
+    if (keys.a || keys.arrowleft) player.dx = -1;
+    else if (keys.d || keys.arrowright) player.dx = 1;
+}
 
 function handlePlayerDeathOnlineSolo() {
     console.log('[DEATH] Morte em modo de aquecimento. Agendando respawn.');
