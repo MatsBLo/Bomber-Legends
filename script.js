@@ -777,6 +777,11 @@ function updatePlayer() {
 
     const prevX = player.x, prevY = player.y, prevFacing = player.facingDirection;
 
+    // Log para debug do movimento (apenas se houver movimento)
+    if (player.dx !== 0 || player.dy !== 0) {
+        console.log('Player movement:', {dx: player.dx, dy: player.dy, speed: player.speed});
+    }
+
     const nextX = player.x + player.dx * player.speed;
     if (!collides(nextX, player.y, player)) player.x = nextX;
 
@@ -1190,14 +1195,17 @@ function setupJoystick() {
             const length=Math.sqrt(data.vector.x*data.vector.x+data.vector.y*data.vector.y);
             player.dx=data.vector.x/length;
             player.dy=-data.vector.y/length;
+            console.log('Joystick move:', {dx: player.dx, dy: player.dy, vector: data.vector});
         }
     });
     manager.on('end',()=>{
         if(player){
             player.dx=0;
             player.dy=0;
+            console.log('Joystick end - reset movement');
         }
     }); 
+    console.log('Joystick configurado com sucesso');
 }
 function handlePlaceBomb(event) { event.preventDefault(); placeBomb(); }
 function handlePlaceTrap(event) { event.preventDefault(); placeTrap(); }
@@ -1758,15 +1766,24 @@ window.addEventListener('keyup', (e) => {
 // Função para processar o movimento baseado no estado das teclas
 function handleMovement() {
     if (!player || !player.isAlive || player.isFrozen) return;
-    // Reset dx/dy
-    player.dx = 0;
-    player.dy = 0;
-    // Vertical
-    if (keys.w || keys.arrowup) player.dy = -1;
-    else if (keys.s || keys.arrowdown) player.dy = 1;
-    // Horizontal
-    if (keys.a || keys.arrowleft) player.dx = -1;
-    else if (keys.d || keys.arrowright) player.dx = 1;
+    
+    // Verifica se alguma tecla de movimento está pressionada
+    const hasKeyboardInput = keys.w || keys.arrowup || keys.s || keys.arrowdown || 
+                            keys.a || keys.arrowleft || keys.d || keys.arrowright;
+    
+    // Só reseta dx/dy se não houver input do teclado
+    // Isso permite que o joystick funcione sem ser sobrescrito
+    if (hasKeyboardInput) {
+        player.dx = 0;
+        player.dy = 0;
+        // Vertical
+        if (keys.w || keys.arrowup) player.dy = -1;
+        else if (keys.s || keys.arrowdown) player.dy = 1;
+        // Horizontal
+        if (keys.a || keys.arrowleft) player.dx = -1;
+        else if (keys.d || keys.arrowright) player.dx = 1;
+    }
+    // Se não há input do teclado, mantém os valores do joystick (dx/dy não são resetados)
 }
 
 function handlePlayerDeathOnlineSolo() {
